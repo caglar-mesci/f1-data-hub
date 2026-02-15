@@ -31,8 +31,8 @@ https://f1-data-caglarmesci.streamlit.app/
 
 Homepage includes the most successful drivers:
 
-- Lewis Hamilton (7)
 - Michael Schumacher (7)
+- Lewis Hamilton (7)
 - Juan Manuel Fangio (5)
 - Alain Prost (4)
 - Sebastian Vettel (4)
