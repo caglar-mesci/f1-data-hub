@@ -51,10 +51,6 @@ Homepage includes the most successful drivers:
 
 ---
 
-# Clone repository
-git clone https://github.com/caglar-mesci/f1-data-hub.git
-cd f1-data-hub
-
 # Create virtual environment
 python -m venv .venv
 
