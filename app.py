@@ -287,9 +287,15 @@ def render_dashboard(year: int, event_name: str, session_name: str, quicklaps_on
         
         cl1, cl2 = st.columns(2)
         with cl1:
-             st.dataframe(pd.DataFrame(stints1), hide_index=True) if stints1 else st.write("No stints")
+            if stints1:
+                st.dataframe(pd.DataFrame(stints1), hide_index=True)
+            else:
+                st.write("No stints")
         with cl2:
-             st.dataframe(pd.DataFrame(stints2), hide_index=True) if stints2 else st.write("No stints")
+            if stints2:
+                st.dataframe(pd.DataFrame(stints2), hide_index=True)
+            else:
+                st.write("No stints")
 
     with tab_raw:
         st.markdown("#### Cleaned Lap Times (mm:ss.mmm)")
