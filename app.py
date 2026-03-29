@@ -37,8 +37,198 @@ def goto(page_name: str) -> None:
     """Updates the session state to navigate between pages."""
     st.session_state.page = page_name
 
+CHAMPION_DATA = {
+    "Michael Schumacher": {
+        "flag": "🇩🇪",
+        "championships": 7,
+        "championship_years": "1994, 1995, 2000, 2001, 2002, 2003, 2004",
+        "teams": "Jordan, Benetton, Ferrari, Mercedes",
+        "career_span": "1991 – 2006, 2010 – 2012",
+        "races": 308,
+        "wins": 91,
+        "poles": 68,
+        "podiums": 155,
+        "bio": "Der Rekordweltmeister. The most dominant driver of his era, winning five consecutive titles with Ferrari (2000–2004). His 91 wins stood as the all-time record for over a decade."
+    },
+    "Lewis Hamilton": {
+        "flag": "🇬🇧",
+        "championships": 7,
+        "championship_years": "2008, 2014, 2015, 2017, 2018, 2019, 2020",
+        "teams": "McLaren, Mercedes, Ferrari",
+        "career_span": "2007 – present",
+        "races": 351,
+        "wins": 105,
+        "poles": 104,
+        "podiums": 202,
+        "bio": "The most decorated driver in Formula 1 history. Hamilton holds records for the most wins (105), poles (104) and podiums (202). Tied Schumacher's 7-title record in 2020."
+    },
+    "Juan Manuel Fangio": {
+        "flag": "🇦🇷",
+        "championships": 5,
+        "championship_years": "1951, 1954, 1955, 1956, 1957",
+        "teams": "Alfa Romeo, Maserati, Mercedes-Benz, Ferrari",
+        "career_span": "1950 – 1958",
+        "races": 51,
+        "wins": 24,
+        "poles": 29,
+        "podiums": 35,
+        "bio": "Widely considered the greatest racing driver of all time. Fangio won 5 championships with 4 different constructors — a feat unmatched to this day. His win rate of 47% remains extraordinary."
+    },
+    "Alain Prost": {
+        "flag": "🇫🇷",
+        "championships": 4,
+        "championship_years": "1985, 1986, 1989, 1993",
+        "teams": "McLaren, Renault, Ferrari, Williams",
+        "career_span": "1980 – 1991, 1993",
+        "races": 199,
+        "wins": 51,
+        "poles": 33,
+        "podiums": 106,
+        "bio": "Known as 'The Professor' for his calculated, cerebral driving style. Prost and Senna's rivalry remains the most iconic in F1 history. He was the first driver to win 4 world titles."
+    },
+    "Sebastian Vettel": {
+        "flag": "🇩🇪",
+        "championships": 4,
+        "championship_years": "2010, 2011, 2012, 2013",
+        "teams": "BMW Sauber, Toro Rosso, Red Bull, Ferrari, Aston Martin",
+        "career_span": "2007 – 2022",
+        "races": 299,
+        "wins": 53,
+        "poles": 57,
+        "podiums": 122,
+        "bio": "The youngest world champion at the time (2010, age 23). Vettel dominated the 2011 season winning 11 races. After Red Bull, he had a celebrated spell at Ferrari before retiring in 2022."
+    },
+    "Max Verstappen": {
+        "flag": "🇳🇱",
+        "championships": 4,
+        "championship_years": "2021, 2022, 2023, 2024",
+        "teams": "Toro Rosso, Red Bull Racing",
+        "career_span": "2015 – present",
+        "races": 208,
+        "wins": 63,
+        "poles": 40,
+        "podiums": 110,
+        "bio": "The youngest driver to start an F1 race (17 years old in 2015) and the youngest race winner. Verstappen's dominance from 2022–2024 saw him shatter records, including 19 wins in a single season (2023)."
+    },
+}
+
+def render_champion_modal(driver_name: str) -> None:
+    """Renders an inline detail card for the selected champion driver."""
+    d = CHAMPION_DATA[driver_name]
+    st.markdown(f"""
+    <style>
+    .modal-card {{
+        background: linear-gradient(135deg, rgba(30,30,40,0.98) 0%, rgba(20,20,30,0.98) 100%);
+        border: 1px solid rgba(225, 6, 0, 0.5);
+        border-radius: 16px;
+        padding: 28px 32px 22px 32px;
+        box-shadow: 0 8px 40px rgba(225,6,0,0.18), 0 2px 12px rgba(0,0,0,0.5);
+        margin-bottom: 18px;
+        position: relative;
+    }}
+    .modal-header {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 6px;
+    }}
+    .modal-driver-name {{
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+    }}
+    .modal-flag {{
+        font-size: 2rem;
+    }}
+    .modal-champ-badge {{
+        font-size: 1rem;
+        font-weight: 700;
+        color: #e10600;
+        background: rgba(225,6,0,0.12);
+        border: 1px solid rgba(225,6,0,0.3);
+        border-radius: 20px;
+        padding: 3px 14px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }}
+    .modal-bio {{
+        font-size: 0.93rem;
+        color: #c0c4d0;
+        line-height: 1.6;
+        margin-bottom: 18px;
+        font-style: italic;
+    }}
+    .modal-grid {{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 24px;
+    }}
+    .modal-stat-label {{
+        font-size: 0.78rem;
+        color: #7a7f94;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+    }}
+    .modal-stat-value {{
+        font-size: 0.97rem;
+        color: #e8eaf0;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }}
+    .modal-divider {{
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        margin: 14px 0 16px 0;
+    }}
+    </style>
+    <div class="modal-card">
+        <div class="modal-header">
+            <span class="modal-flag">{d["flag"]}</span>
+            <span class="modal-driver-name">{driver_name}</span>
+        </div>
+        <div class="modal-champ-badge">🏆 {d["championships"]}× World Champion</div>
+        <p class="modal-bio">{d["bio"]}</p>
+        <hr class="modal-divider">
+        <div class="modal-grid">
+            <div>
+                <div class="modal-stat-label">Championship Years</div>
+                <div class="modal-stat-value">{d["championship_years"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Career Span</div>
+                <div class="modal-stat-value">{d["career_span"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Teams</div>
+                <div class="modal-stat-value">{d["teams"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Races Entered</div>
+                <div class="modal-stat-value">{d["races"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Race Wins</div>
+                <div class="modal-stat-value">{d["wins"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Pole Positions</div>
+                <div class="modal-stat-value">{d["poles"]}</div>
+            </div>
+            <div>
+                <div class="modal-stat-label">Podiums</div>
+                <div class="modal-stat-value">{d["podiums"]}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def render_homepage() -> None:
     """Renders the aesthetic landing page with feature cards and champions."""
+    if "selected_champion" not in st.session_state:
+        st.session_state.selected_champion = None
+
     st.markdown("""
     <div style="text-align: center; padding: 1rem 0;">
         <h1 style="font-size: 3rem; margin-bottom: 0;">🏁 <span style="color: #e10600;">F1</span> Data Hub</h1>
@@ -84,16 +274,70 @@ def render_homepage() -> None:
     </style>
     """, unsafe_allow_html=True)
     
+    # --- Row 1: Schumacher, Hamilton, Fangio ---
     c1, c2, c3 = st.columns(3)
-    c1.markdown("<div class='champ-card'><span class='champ-num'>7×</span><br><span class='champ-name'>Michael Schumacher</span></div>", unsafe_allow_html=True)
-    c2.markdown("<div class='champ-card'><span class='champ-num'>7×</span><br><span class='champ-name'>Lewis Hamilton</span></div>", unsafe_allow_html=True)
-    c3.markdown("<div class='champ-card'><span class='champ-num'>5×</span><br><span class='champ-name'>Juan Manuel Fangio</span></div>", unsafe_allow_html=True)
-    
+    with c1:
+        st.markdown("<div class='champ-card'><span class='champ-num'>7×</span><br><span class='champ-name'>Michael Schumacher</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_schumacher", use_container_width=True):
+            if st.session_state.selected_champion == "Michael Schumacher":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Michael Schumacher"
+            st.rerun()
+    with c2:
+        st.markdown("<div class='champ-card'><span class='champ-num'>7×</span><br><span class='champ-name'>Lewis Hamilton</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_hamilton", use_container_width=True):
+            if st.session_state.selected_champion == "Lewis Hamilton":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Lewis Hamilton"
+            st.rerun()
+    with c3:
+        st.markdown("<div class='champ-card'><span class='champ-num'>5×</span><br><span class='champ-name'>Juan Manuel Fangio</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_fangio", use_container_width=True):
+            if st.session_state.selected_champion == "Juan Manuel Fangio":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Juan Manuel Fangio"
+            st.rerun()
+
+    # --- Row 2: Prost, Vettel, Verstappen ---
     c4, c5, c6 = st.columns(3)
-    c4.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Alain Prost</span></div>", unsafe_allow_html=True)
-    c5.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Sebastian Vettel</span></div>", unsafe_allow_html=True)
-    c6.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Max Verstappen</span></div>", unsafe_allow_html=True)
-    
+    with c4:
+        st.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Alain Prost</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_prost", use_container_width=True):
+            if st.session_state.selected_champion == "Alain Prost":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Alain Prost"
+            st.rerun()
+    with c5:
+        st.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Sebastian Vettel</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_vettel", use_container_width=True):
+            if st.session_state.selected_champion == "Sebastian Vettel":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Sebastian Vettel"
+            st.rerun()
+    with c6:
+        st.markdown("<div class='champ-card'><span class='champ-num'>4×</span><br><span class='champ-name'>Max Verstappen</span></div>", unsafe_allow_html=True)
+        if st.button("ℹ️ View Stats", key="btn_verstappen", use_container_width=True):
+            if st.session_state.selected_champion == "Max Verstappen":
+                st.session_state.selected_champion = None
+            else:
+                st.session_state.selected_champion = "Max Verstappen"
+            st.rerun()
+
+    # --- Champion Detail Panel ---
+    if st.session_state.selected_champion:
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_modal, col_close = st.columns([10, 1])
+        with col_close:
+            if st.button("✕", key="close_modal", help="Close"):
+                st.session_state.selected_champion = None
+                st.rerun()
+        render_champion_modal(st.session_state.selected_champion)
+
     st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 2])
