@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from data_loader import get_supported_years, get_year_schedule, safe_load_session, get_available_sessions
+from data_loader import get_supported_years, get_year_schedule, safe_load_session, get_available_sessions, fetch_live_champion_stats
 from utils import (
     fmt_timedelta, td_series_to_seconds, safe_driver_fullname, 
     laps_for_pace, laps_for_strategy, compute_kpis, build_stints, 
@@ -56,11 +56,11 @@ CHAMPION_DATA = {
         "championship_years": "2008, 2014, 2015, 2017, 2018, 2019, 2020",
         "teams": "McLaren, Mercedes, Ferrari",
         "career_span": "2007 – present",
-        "races": 351,
-        "wins": 105,
-        "poles": 104,
-        "podiums": 202,
-        "bio": "The most decorated driver in Formula 1 history. Hamilton holds records for the most wins (105), poles (104) and podiums (202). Tied Schumacher's 7-title record in 2020."
+        "races": 391,
+        "wins": 106,
+        "poles": 118,
+        "podiums": 207,
+        "bio": "The most decorated driver in Formula 1 history. Hamilton holds records for the most wins (106), poles (118) and podiums (207). Tied Schumacher's 7-title record in 2020."
     },
     "Juan Manuel Fangio": {
         "flag": "🇦🇷",
@@ -68,7 +68,7 @@ CHAMPION_DATA = {
         "championship_years": "1951, 1954, 1955, 1956, 1957",
         "teams": "Alfa Romeo, Maserati, Mercedes-Benz, Ferrari",
         "career_span": "1950 – 1958",
-        "races": 51,
+        "races": 58,
         "wins": 24,
         "poles": 29,
         "podiums": 35,
@@ -80,7 +80,7 @@ CHAMPION_DATA = {
         "championship_years": "1985, 1986, 1989, 1993",
         "teams": "McLaren, Renault, Ferrari, Williams",
         "career_span": "1980 – 1991, 1993",
-        "races": 199,
+        "races": 202,
         "wins": 51,
         "poles": 33,
         "podiums": 106,
@@ -92,7 +92,7 @@ CHAMPION_DATA = {
         "championship_years": "2010, 2011, 2012, 2013",
         "teams": "BMW Sauber, Toro Rosso, Red Bull, Ferrari, Aston Martin",
         "career_span": "2007 – 2022",
-        "races": 299,
+        "races": 300,
         "wins": 53,
         "poles": 57,
         "podiums": 122,
@@ -104,17 +104,28 @@ CHAMPION_DATA = {
         "championship_years": "2021, 2022, 2023, 2024",
         "teams": "Toro Rosso, Red Bull Racing",
         "career_span": "2015 – present",
-        "races": 208,
-        "wins": 63,
-        "poles": 40,
-        "podiums": 110,
-        "bio": "The youngest driver to start an F1 race (17 years old in 2015) and the youngest race winner. Verstappen's dominance from 2022–2024 saw him shatter records, including 19 wins in a single season (2023)."
+        "races": 244,
+        "wins": 71,
+        "poles": 64,
+        "podiums": 131,
+        "bio": "The youngest driver to start an F1 race (17 years old in 2015) and the youngest race winner. Verstappen's dominance saw him shatter records, including 19 wins in a single season (2023) and 4 world titles."
     },
 }
 
+def get_champion_data() -> dict:
+    """Returns CHAMPION_DATA merged with live API stats (cached for 24h)."""
+    merged_data = {k: v.copy() for k, v in CHAMPION_DATA.items()}
+    live = fetch_live_champion_stats()
+    for name, updates in live.items():
+        if name in merged_data:
+            merged_data[name].update(updates)
+    return merged_data
+
+
 def render_champion_modal(driver_name: str) -> None:
     """Renders an inline detail card for the selected champion driver."""
-    d = CHAMPION_DATA[driver_name]
+    champions = get_champion_data()
+    d = champions[driver_name]
     st.markdown(f"""
     <style>
     .modal-card {{
@@ -233,6 +244,7 @@ def render_homepage() -> None:
     <div style="text-align: center; padding: 1rem 0;">
         <h1 style="font-size: 3rem; margin-bottom: 0;">🏁 <span style="color: #e10600;">F1</span> Data Hub</h1>
         <p style="font-size: 1.1rem; color: #a3a8b8; font-weight: 300; margin-top: 5px;">Formula 1 Data Exploration & Comparison Platform</p>
+        <p style="font-size: 0.85rem; color: #4CAF50; font-weight: 500; margin-top: 4px;">🟢 Live Driver Stats Auto-Sync Active (24h Cache)</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -580,7 +592,7 @@ def main() -> None:
         st.header("⚙️ Settings")
         
         # Determine the most recent year cleanly
-        default_year = 2021 if 2021 in years else years[0]
+        default_year = years[0]
         selected_year = st.selectbox("Season", years, index=years.index(default_year))
 
         schedule = get_year_schedule(selected_year)
