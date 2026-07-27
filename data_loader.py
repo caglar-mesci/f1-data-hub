@@ -1,7 +1,8 @@
 import os
 from typing import List, Tuple, Optional, Any, Dict
 from datetime import datetime
-import requests
+import json
+import urllib.request
 import fastf1
 import pandas as pd
 import streamlit as st
@@ -23,18 +24,20 @@ def ensure_fastf1_cache() -> None:
 
 @st.cache_data(show_spinner=False)
 def get_supported_years() -> List[int]:
-    """Discover seasons that have a non-empty event schedule."""
-    years: List[int] = []
+    """Return supported Formula 1 seasons from current year down to 1950."""
     current_year = datetime.now().year
-    # Include seasons up to current year (and next year if schedule exists)
-    for y in range(1950, current_year + 2):
-        try:
-            sched = fastf1.get_event_schedule(y)
-            if sched is not None and len(sched) > 0:
-                years.append(y)
-        except Exception:
-            pass
-    return sorted(years, reverse=True) # Sort descending for better UX
+    return list(range(current_year, 1949, -1))
+
+def _http_get_json(url: str, timeout: int = 3) -> Optional[dict]:
+    """Helper to safely fetch JSON from external endpoints using standard urllib."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "F1DataHub/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            if response.status == 200:
+                return json.loads(response.read().decode("utf-8"))
+    except Exception:
+        pass
+    return None
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def fetch_live_champion_stats() -> Dict[str, Dict[str, Any]]:
@@ -56,26 +59,26 @@ def fetch_live_champion_stats() -> Dict[str, Dict[str, Any]]:
         try:
             d_data: Dict[str, Any] = {}
             # Total races
-            r_races = requests.get(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results.json?limit=1", timeout=3)
-            if r_races.status_code == 200:
-                d_data["races"] = int(r_races.json()["MRData"]["total"])
+            races_json = _http_get_json(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results.json?limit=1")
+            if races_json and "MRData" in races_json:
+                d_data["races"] = int(races_json["MRData"]["total"])
 
             # Wins & Podiums (p1, p2, p3)
-            r_p1 = requests.get(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/1.json?limit=1", timeout=3)
-            r_p2 = requests.get(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/2.json?limit=1", timeout=3)
-            r_p3 = requests.get(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/3.json?limit=1", timeout=3)
-            
-            if r_p1.status_code == 200 and r_p2.status_code == 200 and r_p3.status_code == 200:
-                p1 = int(r_p1.json()["MRData"]["total"])
-                p2 = int(r_p2.json()["MRData"]["total"])
-                p3 = int(r_p3.json()["MRData"]["total"])
+            p1_json = _http_get_json(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/1.json?limit=1")
+            p2_json = _http_get_json(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/2.json?limit=1")
+            p3_json = _http_get_json(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/results/3.json?limit=1")
+
+            if p1_json and p2_json and p3_json:
+                p1 = int(p1_json["MRData"]["total"])
+                p2 = int(p2_json["MRData"]["total"])
+                p3 = int(p3_json["MRData"]["total"])
                 d_data["wins"] = p1
                 d_data["podiums"] = p1 + p2 + p3
 
             # Poles (qualifying P1)
-            r_poles = requests.get(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/qualifying/1.json?limit=1", timeout=3)
-            if r_poles.status_code == 200:
-                poles_cnt = int(r_poles.json()["MRData"]["total"])
+            poles_json = _http_get_json(f"https://api.jolpi.ca/ergast/f1/drivers/{driver_id}/qualifying/1.json?limit=1")
+            if poles_json and "MRData" in poles_json:
+                poles_cnt = int(poles_json["MRData"]["total"])
                 if poles_cnt > 0:
                     d_data["poles"] = poles_cnt
 
@@ -84,6 +87,7 @@ def fetch_live_champion_stats() -> Dict[str, Dict[str, Any]]:
         except Exception:
             pass
     return live_stats
+
 
 
 @st.cache_data(show_spinner=False)
